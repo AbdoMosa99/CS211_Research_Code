@@ -4,5 +4,6 @@ void CircularTest();
 
 int main() {
 	singleTest();
+	DoubleTest();
 }
 

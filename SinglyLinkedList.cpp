@@ -101,6 +101,7 @@ SinglyLinkedList<T>& SinglyLinkedList<T>::Delete(int k, T & x)
 		if (k == length - 1) {
 			temp = rightEnd;
 			rightEnd = it;
+			rightEnd->next = nullptr;
 		}
 
 		// in case it's in between
@@ -169,7 +170,9 @@ void SinglyLinkedList<T>::Output(std::ostream & out) const
 	// iterate and print every element
 	SingleNode<T> *it = leftEnd;
 	while (it != nullptr) {
-		out << it->data << ", ";
+		out << it->data;
+		if (it->next != nullptr)
+			out << ", ";
 		it = it->next;
 	}
 }
@@ -487,7 +490,7 @@ void SinglyLinkedList<T>::insert(T element)
 			rightEnd = newNode;
 		}
 
-		// in case insertion is in between
+		// in case insertion shoule be in between
 		else {
 			SingleNode<T> *temp = it->next;
 			it->next = newNode;

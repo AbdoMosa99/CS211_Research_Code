@@ -1,9 +1,10 @@
 void singleTest();
-void DoubleTest();
-void CircularTest();
+void doubleTest();
+void circularTest();
 
 int main() {
 	singleTest();
-	DoubleTest();
+	doubleTest();
+	circularTest();
 }
 

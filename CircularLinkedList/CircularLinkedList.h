@@ -27,7 +27,7 @@ public:
 	int getLengthRecursive();
 	void swap(int firstIndex, int secondIndex);
 	void reverse();
-	CircularLinkedList<T> merge(CircularLinkedList list);
+	CircularLinkedList<T>* merge(CircularLinkedList<T>* list);
 	T getMax();
 	T getMin();
 	T getSum();
@@ -36,7 +36,7 @@ public:
 	T getStrDev();
 	T getMaxSecond();
 	T getMinSecond();
-	CircularLinkedList<T> split();
+	CircularLinkedList<T>* split();
 	void insert(T element);
 	bool isSorted();
 	bool isEven();
@@ -44,7 +44,7 @@ public:
 
 private:
 	// data members
-	SingleNode<T> *head;
+	SingleNode<T> *head, *last;
 	int length;
 
 	// additional methods needed 

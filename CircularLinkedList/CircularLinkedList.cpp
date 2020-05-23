@@ -1,3 +1,7 @@
+/* this implementation of Circular Linked List
+	is zero-indexed
+*/
+
 #include "CircularLinkedList.h"
 
 
@@ -5,13 +9,22 @@
 template<class T>
 CircularLinkedList<T>::CircularLinkedList()
 {
-	head = nullptr;
+	head = last = nullptr;
 	length = 0;
 }
 
 template<class T>
 CircularLinkedList<T>::~CircularLinkedList()
 {
+	// iterate and delete every node
+	SingleNode<T> *it = head, *temp;
+	for (int i = 0; i < length; i++) {
+		temp = it;
+		it = it->next;
+		delete temp;
+	}
+	head = last = nullptr;
+	length = 0;
 }
 
 template<class T>
@@ -24,25 +37,20 @@ int CircularLinkedList<T>::Length() const
 template<class T>
 bool CircularLinkedList<T>::Find(int k, T & x) const
 {
-	if (head->data == x)
-		return true;
+	if (k < 0 || k >= length)
+		return false;
 
 	// declare an iterator ptr
-	SingleNode<T> *it = head->next;
+	SingleNode<T> *it = head;
 
-	// iterate until the starting point
+	// iterate until the position given
 	for (int i = 0; i < k; i++) {
 		it = it->next;
 	}
 
-	// iterate to see if the key exists and returns true
-	while (it != head) {
-		if (it->data == x)
-			return true;
-		it = it->next;
-	}
-	// otherwise
-	return false;
+	// save the value and declare success
+	x = it->data;
+	return true;
 }
 
 // A method that searches for a specific key and return its position
@@ -68,40 +76,49 @@ template<class T>
 CircularLinkedList<T>& CircularLinkedList<T>::Delete(int k, T & x)
 {
 	// iterator ptr
-	SingleNode<T> *it = head;
+	SingleNode<T> *it = head, *temp;
 
-	// in case it's empty, do nothing
-	if (isEmpty())
+	// check index and that's not empty
+	if (k < 0 || k >= length || isEmpty())
 		return *this;
 
-	// in case its the first element
-	else if (it->data == x) {
-		SingleNode<T> *temp = head, *last = head;
-		while (last->next != head) {
-			last = last->next;
-		}
+
+	// in case it's the first element
+	else if (k == 0) {
+		temp = head;
 		head = head->next;
 		last->next = head;
-		delete temp;
-		length--;
 	}
 
-	// otherwise iterate and if found then delete
+	// otherwise iterate untill the prev to the position given
 	else {
-		while (it->next != head) {
-			if (it->next->data == x) {
-				SingleNode<T> *temp = it->next;
-				it->next = temp->next;
-				delete temp;
-				length--;
-				break;
-			}
+		for (int i = 0; i < k - 1; i++) {
 			it = it->next;
 		}
+
+		// in case it's the last element 
+		if (k == length - 1) {
+			temp = last;
+			last = it;
+			last->next = head;
+		}
+
+		// in case it's in between
+		else {
+			temp = it->next;
+			it->next = temp->next;
+		}
 	}
+
+	// delete the element and save its value
+	x = temp->data;
+	delete temp;
+	length--;
 	return *this;
+	
 }
 
+// A methdod that inserts an element into agiven position
 template<class T>
 CircularLinkedList<T>& CircularLinkedList<T>::Insert(int k, const T & x)
 {
@@ -114,25 +131,29 @@ CircularLinkedList<T>& CircularLinkedList<T>::Insert(int k, const T & x)
 
 	// insert in case it's empty
 	if (isEmpty()) {
-		head = newNode;
-		head->next = head;
+		head = last = newNode;
+		last->next = head;
 	}
 
 	// insert in case at the beginning
 	else if (k == 0) {
 		newNode->next = head;
-		SingleNode<T> *last = head;
-		while (last->next != head) {
-			last = last->next;
-		}
 		head = newNode;
 		last->next = head;
 	}
 
+	// in case at the end
+	if (k == length) {
+		last->next = newNode;
+		last = newNode;
+		last->next = head;
+	}
+
+	// otherwise, in case in between
 	else {
 		// iterate untill the position given
 		SingleNode<T> *it = head;
-		for (int i = 0; i < k - 1 && it->next != head; i++)
+		for (int i = 0; i < k - 1; i++)
 			it = it->next;
 
 		SingleNode<T> *temp = it->next;
@@ -149,29 +170,40 @@ template<class T>
 void CircularLinkedList<T>::Output(std::ostream & out) const
 {
 	// iterate and print every element
-	out << head->data << ", ";
-	SingleNode<T> *it = head->next;
-	while (it != head) {
-		out << it->data << ", ";
+	SingleNode<T> *it = head;
+	for (int i = 0; i < length; i++) {
+		out << it->data;
+		if (it != last)
+			out << ", ";
 		it = it->next;
 	}
-	out << std::endl;
+}
+
+// overload the operator << to work with this object
+template<class T>
+std::ostream & operator<<(std::ostream & out, const CircularLinkedList<T>& x)
+{
+	x.Output(out);
+	return out;
 }
 
 // A method to get the length Iteratively
 template<class T>
 int CircularLinkedList<T>::getLengthIterative()
 {
+	// in case it's already empty
 	if (head == nullptr)
 		return 0;
 
-	int length = 1;
-	SingleNode<T> *it = head->next;
-	while (it != head) {
-		length++;
+	// otherwise, start counting with 1 considering the last
+	int l = 1;
+	SingleNode<T> *it = head;
+	while (it != last) {
+		l++;
 		it = it->next;
 	}
-	return length;
+
+	return l;
 }
 
 // A method to get the length Recusively
@@ -179,7 +211,7 @@ template<class T>
 int CircularLinkedList<T>::getLengthRecursive()
 {
 	static SingleNode<T> *it = head;
-	if (it->next == head)
+	if (it == last)
 		return 1;
 	it = it->next;
 	return 1 + getLengthRecursive();
@@ -190,22 +222,29 @@ template<class T>
 void CircularLinkedList<T>::swap(int firstIndex, int secondIndex)
 {
 	// check indexes
-	checkIndex(firstIndex);
-	checkIndex(secondIndex);
+	if (firstIndex < 0 || firstIndex >= length
+		|| secondIndex < 0 || secondIndex >= length)
+		throw std::out_of_range("Index Out of Bounds");
 
-	// get the previous node of the first
-	SingleNode<T> *firstNodePrev = head;
-	for (int i = 0; i < firstIndex - 1; i++)
-		firstNodePrev = firstNodePrev->next;
+	// declare some pointers to work with
+	SingleNode<T> *firstNodePrev = last, *firstNode = head,
+		*secondNodePrev = last, *secondNode = head;
 
-	// get the previous node of the second
-	SingleNode<T> *secondNodePrev = head;
-	for (int i = 0; i < secondIndex - 1; i++)
-		secondNodePrev = secondNodePrev->next;
+	// get the first node and its previous
+	if (firstIndex != 0) {
+		firstNodePrev = head;
+		for (int i = 0; i < firstIndex - 1; i++)
+			firstNodePrev = firstNodePrev->next;
+		firstNode = firstNodePrev->next;
+	}
 
-	// get the nodes themselves
-	SingleNode<T> *firstNode = firstNodePrev->next;
-	SingleNode<T> *secondNode = secondNodePrev->next;
+	// get the second node and its previous
+	if (secondIndex != 0) {
+		secondNodePrev = head;
+		for (int i = 0; i < secondIndex - 1; i++)
+			secondNodePrev = secondNodePrev->next;
+		secondNode = secondNodePrev->next;
+	}
 
 	// swap the previous nexts
 	firstNodePrev->next = secondNode;
@@ -215,12 +254,25 @@ void CircularLinkedList<T>::swap(int firstIndex, int secondIndex)
 	SingleNode<T> *temp = firstNode->next;
 	firstNode->next = secondNode->next;
 	secondNode->next = temp;
+
+	// update list pointers
+	if (firstIndex == 0)
+		head = secondNode;
+	if (secondIndex == 0)
+		head = firstNode;
+	if (firstIndex == length - 1)
+		last = secondNode;
+	if (secondIndex == length - 1)
+		last = firstNode;
 }
 
 // A method that reverses the linked list
 template<class T>
 void CircularLinkedList<T>::reverse()
 {
+	if (isEmpty())
+		return;
+
 	// initialize pointers to work with
 	SingleNode<T> *originalStart = head->next;
 	SingleNode<T> *fakeStart = head;
@@ -233,52 +285,47 @@ void CircularLinkedList<T>::reverse()
 		originalStart = temp;
 	}
 
+	// update the pointers
+	last = head;
 	head = fakeStart;
-	originalStart->next = head;
+	last->next = head;
 	
 }
 
 // A method that merges 2 sorted lists into another sorted one
 template<class T>
-CircularLinkedList<T> CircularLinkedList<T>::merge(CircularLinkedList list)
+CircularLinkedList<T>* CircularLinkedList<T>::merge(CircularLinkedList<T>* list)
 {
 	// initialize some variables
-	SingleNode<T> *it1 = head, *it2 = list.head;
-	CircularLinkedList<T> newList;
-	int i = 0;
+	SingleNode<T> *it1 = head, *it2 = list->head;
+	int i = 0, j = 0;
+	CircularLinkedList<T> *newList = new CircularLinkedList<T>();
+	int c = 0;
 
 	// use merge technique and insert to the new list
-	while (it1 != nullptr && it2 != nullptr) {
+	while (i < length && j < length) {
 		if (it1->data < it2->data) {
-			newList.Insert(i++, it1->data);
-			if (it1->next == head)
-				it1 = nullptr;
-			else
-				it1 = it1->next;
+			newList->Insert(c++, it1->data);
+			it1 = it1->next;
+			i++;
 		}
 		else {
-			newList.Insert(i++, it2->data);
-			if (it2->next == head)
-				it2 = nullptr;
-			else
-				it2 = it2->next;
+			newList->Insert(c++, it2->data);
+			it2 = it2->next;
+			j++;
 		}
 	}
 
 	// insert the rest 
-	while (it1 != nullptr) {
-		newList.Insert(i++, it1->data);
-		if (it1->next == head)
-			it1 = nullptr;
-		else
-			it1 = it1->next;
+	while (i < length) {
+		newList->Insert(i++, it1->data);
+		it1 = it1->next;
+		i++;
 	}
-	while (it2 != nullptr) {
-		newList.Insert(i++, it2->data);
-		if (it2->next == list.head)
-			it2 = nullptr;
-		else
-			it2 = it2->next;
+	while (j < length) {
+		newList->Insert(i++, it2->data);
+		it2 = it2->next;
+		j++;
 	}
 
 	return newList;
@@ -288,6 +335,9 @@ CircularLinkedList<T> CircularLinkedList<T>::merge(CircularLinkedList list)
 template<class T>
 T CircularLinkedList<T>::getMax()
 {
+	if (isEmpty())
+		throw std::exception("Empty List!");
+
 	T max = head->data;
 	SingleNode<T> *it = head->next;
 	while (it != head) {
@@ -303,6 +353,9 @@ T CircularLinkedList<T>::getMax()
 template<class T>
 T CircularLinkedList<T>::getMin()
 {
+	if (isEmpty())
+		throw std::exception("Empty List!");
+
 	T min = head->data;
 	SingleNode<T> *it = head->next;
 	while (it != head) {
@@ -318,6 +371,9 @@ T CircularLinkedList<T>::getMin()
 template<class T>
 T CircularLinkedList<T>::getSum()
 {
+	if (isEmpty())
+		return 0;
+
 	T sum = head->data;
 	SingleNode<T> *it = head->next;
 	while (it != head) {
@@ -358,13 +414,11 @@ T CircularLinkedList<T>::getStrDev()
 {
 	T mean = getAver(), stdDev = 0;
 	SingleNode<T> *it = head;
-	while (it != nullptr) {
+	for (int i = 0; i < length; i++) {
 		stdDev += (it->data - mean) * (it->data - mean);
-		if (it->next == head)
-			it = nullptr;
-		else
-			it = it->next;
+		it = it->next;
 	}
+
 	stdDev /= length;
 	stdDev = sqrt(stdDev);
 	return stdDev;
@@ -374,18 +428,35 @@ T CircularLinkedList<T>::getStrDev()
 template<class T>
 T CircularLinkedList<T>::getMaxSecond()
 {
-	T max = getMax();
-	T secondMax;
-	if (max == head->data)
-		secondMax = head->next->data;
-	else
-		secondMax = head->data;
+	// check validation
+	if (length < 2)
+		throw std::exception("Not Enough Elements!");
 
-	SingleNode<T> *it = head->next;
+	// initialize the max and second max
+	T max, secondMax;
+	if (head->data > head->next->data) {
+		max = head->data;
+		secondMax = head->next->data;
+	}
+	else {
+		max = head->next->data;
+		secondMax = head->data;
+	}
+
+	// iterate from the third position
+	SingleNode<T> *it = head->next->next;
 	while (it != head) {
-		if (it->data > secondMax && it->data != max) {
+		// in case it's bigger than max
+		if (it->data > max) {
+			secondMax = max;
+			max = it->data;
+		}
+
+		// in case it's between max and second
+		else if (it->data > secondMax) {
 			secondMax = it->data;
 		}
+
 		it = it->next;
 	}
 	return secondMax;
@@ -395,18 +466,35 @@ T CircularLinkedList<T>::getMaxSecond()
 template<class T>
 T CircularLinkedList<T>::getMinSecond()
 {
-	T min = getMin();
-	T secondMin;
-	if (min == head->data)
-		secondMin = head->next->data;
-	else
-		secondMin = head->data;
+	// check validation
+	if (length < 2)
+		throw std::exception("Not Enough Elements!");
 
-	SingleNode<T> *it = head->next;
+	// initialize the min and second min
+	T min, secondMin;
+	if (head->data < head->next->data) {
+		min = head->data;
+		secondMin = head->next->data;
+	}
+	else {
+		min = head->next->data;
+		secondMin = head->data;
+	}
+
+	// iterate from the third position
+	SingleNode<T> *it = head->next->next;
 	while (it != head) {
-		if (it->data < secondMin && it->data != min) {
+		// in case it's smaller than min
+		if (it->data < min) {
+			secondMin = min;
+			min = it->data;
+		}
+
+		// in case it's between min and second
+		else if (it->data < secondMin) {
 			secondMin = it->data;
 		}
+
 		it = it->next;
 	}
 	return secondMin;
@@ -414,13 +502,13 @@ T CircularLinkedList<T>::getMinSecond()
 
 // A method that splits a list into two halves
 template<class T>
-CircularLinkedList<T> CircularLinkedList<T>::split()
+CircularLinkedList<T>* CircularLinkedList<T>::split()
 {
 	// create a new list for the right half
-	CircularLinkedList<T> rightHalf;
+	CircularLinkedList<T> *rightHalf = new CircularLinkedList<T>();
 
-	// update some attributes
-	rightHalf.length = length - length / 2;
+	// update the lengths
+	rightHalf->length = length - length / 2;
 	length = length / 2;
 
 	// iterate untill the breaking point
@@ -430,13 +518,12 @@ CircularLinkedList<T> CircularLinkedList<T>::split()
 	}
 
 	// Split the list 
-	rightHalf.head = it->next;
-	it->next = head;
-	it = rightHalf.head;
-	while (it->next != head) {
-		it = it->next;
-	}
-	it->next = rightHalf.head;
+	rightHalf->head = it->next;
+	rightHalf->last = last;
+	rightHalf->last->next = rightHalf->head;
+	last = it;
+	last->next = head;
+	
 
 	// return the new list
 	return rightHalf;
@@ -446,33 +533,42 @@ CircularLinkedList<T> CircularLinkedList<T>::split()
 template<class T>
 void CircularLinkedList<T>::insert(T element)
 {
+	// create the new node
 	SingleNode<T> *newNode = new SingleNode<T>();
 	newNode->data = element;
-	SingleNode<T> *it = head;
 
+	// in case it's empty
 	if (isEmpty()) {
-		head = newNode;
-		head->next = head;
+		head = last = newNode;
+		last->next = head;
 	}
 
-	else if (it->data > element) {
-		newNode->next = it;
-		SingleNode<T> *last = head;
-		while (last->next != head) {
-			last = last->next;
-		}
+	// in case insertion should be at the beginning
+	else if (head->data > element) {
+		newNode->next = head;
 		head = newNode;
 		last->next = head;
 	}
 
+	// in case insertion should be at the end
+	else if (last->data < element) {
+		last->next = newNode;
+		last = newNode;
+		last->next = head;
+	}
+
+	// otherwise, in case in between
 	else {
-		while (it->next != head && it->next->data < element)
+		// iterate untill the proper position 
+		SingleNode<T> *it = head;
+		while (it->next->data < element)
 			it = it->next;
 
-			SingleNode<T> *temp = it->next;
-			it->next = newNode;
-			newNode->next = temp;
+		SingleNode<T> *temp = it->next;
+		it->next = newNode;
+		newNode->next = temp;
 	}
+
 	length++;
 }
 
@@ -497,14 +593,10 @@ template<class T>
 bool CircularLinkedList<T>::isEven()
 {
 	SingleNode<T> *it = head;
-	while (it != nullptr) {
+	for (int i = 0; i < length; i++) {
 		if (it->data % 2 != 0)
 			return false;
-
-		if (it->next == head)
-			it = nullptr;
-		else
-			it = it->next;
+		it = it->next;
 	}
 	return true;
 }
@@ -514,14 +606,10 @@ template<class T>
 bool CircularLinkedList<T>::isOdd()
 {
 	SingleNode<T> *it = head;
-	while (it != nullptr) {
+	for (int i = 0; i < length; i++) {
 		if (it->data % 2 != 1)
 			return false;
-		
-		if (it->next == head)
-			it = nullptr;
-		else
-			it = it->next;
+		it = it->next;
 	}
 	return true;
 }

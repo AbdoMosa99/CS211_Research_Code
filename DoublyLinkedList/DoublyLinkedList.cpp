@@ -119,6 +119,7 @@ DoublyLinkedList<T>& DoublyLinkedList<T>::Delete(int k, T & x)
 	return *this;
 }
 
+// A methdod that inserts an element into agiven position
 template<class T>
 DoublyLinkedList<T>& DoublyLinkedList<T>::Insert(int k, const T & x)
 {
@@ -141,27 +142,25 @@ DoublyLinkedList<T>& DoublyLinkedList<T>::Insert(int k, const T & x)
 		leftEnd = newNode;
 	}
 
+	// in case at the end
+	else if (k == length) {
+		rightEnd->next = newNode;
+		newNode->prev = rightEnd;
+		rightEnd = newNode;
+	}
+
+	// otherwise, in case in between
 	else {
 		// iterate untill the position given
 		DoubleNode<T> *it = leftEnd;
-		for (int i = 0; i < k - 1 && it->next != nullptr; i++)
+		for (int i = 0; i < k - 1; i++)
 			it = it->next;
 
-		// in case at the end
-		if (k == length) {
-			rightEnd->next = newNode;
-			newNode->prev = rightEnd;
-			rightEnd = newNode;
-		}
-
-		// in case in between
-		else {
-			DoubleNode<T> *temp = it->next;
-			it->next = newNode;
-			newNode->prev = it;
-			newNode->next = temp;
-			temp->prev = newNode;
-		}
+		DoubleNode<T> *temp = it->next;
+		it->next = newNode;
+		newNode->prev = it;
+		newNode->next = temp;
+		temp->prev = newNode;
 	}
 
 	length++;
@@ -219,27 +218,36 @@ template<class T>
 void DoublyLinkedList<T>::swap(int firstIndex, int secondIndex)
 {
 	// check indexes
-	checkIndex(firstIndex);
-	checkIndex(secondIndex);
+	if (firstIndex < 0 || firstIndex >= length
+		|| secondIndex < 0 || secondIndex >= length)
+		throw std::out_of_range("Index Out of Bounds");
 
-	// get the previous node of the first
-	DoubleNode<T> *firstNodePrev = leftEnd;
-	for (int i = 0; i < firstIndex - 1; i++)
-		firstNodePrev = firstNodePrev->next;
+	// declare some pointers to work with
+	DoubleNode<T> *firstNodePrev = nullptr, *firstNode = leftEnd,
+		*secondNodePrev = nullptr, *secondNode = leftEnd;
 
-	// get the previous node of the second
-	DoubleNode<T> *secondNodePrev = leftEnd;
-	for (int i = 0; i < secondIndex - 1; i++)
-		secondNodePrev = secondNodePrev->next;
+	// get the first node and its previous
+	if (firstIndex != 0) {
+		firstNodePrev = leftEnd;
+		for (int i = 0; i < firstIndex - 1; i++)
+			firstNodePrev = firstNodePrev->next;
+		firstNode = firstNodePrev->next;
+	}
 
-	// get the nodes themselves
-	DoubleNode<T> *firstNode = firstNodePrev->next;
-	DoubleNode<T> *secondNode = secondNodePrev->next;
+	// get the second node and its previous
+	if (secondIndex != 0) {
+		secondNodePrev = leftEnd;
+		for (int i = 0; i < secondIndex - 1; i++)
+			secondNodePrev = secondNodePrev->next;
+		secondNode = secondNodePrev->next;
+	}
 
 	// swap the previous nexts and prevs
-	firstNodePrev->next = secondNode;
+	if (firstNodePrev != nullptr)
+		firstNodePrev->next = secondNode;
 	secondNode->prev = firstNodePrev;
-	secondNodePrev->next = firstNode;
+	if (secondNodePrev != nullptr)
+		secondNodePrev->next = firstNode;
 	firstNode->prev = secondNodePrev;
 
 	// swap the nodes nexts and prevs
@@ -248,6 +256,16 @@ void DoublyLinkedList<T>::swap(int firstIndex, int secondIndex)
 	secondNode->next->prev = firstNode;
 	secondNode->next = temp;
 	temp->prev = secondNode;
+
+	// update list pointers
+	if (firstIndex == 0)
+		leftEnd = secondNode;
+	if (secondIndex == 0)
+		leftEnd = firstNode;
+	if (firstIndex == length - 1)
+		rightEnd = secondNode;
+	if (secondIndex == length - 1)
+		rightEnd = firstNode;
 }
 
 // A method that reverses the linked list
@@ -519,28 +537,27 @@ void DoublyLinkedList<T>::insert(T element)
 		leftEnd = newNode;
 	}
 
-	// otherwise iterate until the proper position
+	// in case insertion should be at the end
+	else if (rightEnd->data < element) {
+		rightEnd->next = newNode;
+		newNode->prev = rightEnd;
+		rightEnd = newNode;
+	}
+
+	// otherwise, in case in between
 	else {
+		// iterate until the proper position
 		DoubleNode<T> *it = leftEnd;
 		while (it->next != nullptr && it->next->data < element)
 			it = it->next;
 
-		// in case insertion should be at the end
-		if (it->next == nullptr) {
-			rightEnd->next = newNode;
-			newNode->prev = rightEnd;
-			rightEnd = newNode;
-		}
-
-		// in case insertion should be in between
-		else {
-			DoubleNode<T> *temp = it->next;
-			it->next = newNode;
-			newNode->prev = it;
-			newNode->next = temp;
-			temp->prev = newNode;
-		}
+		DoubleNode<T> *temp = it->next;
+		it->next = newNode;
+		newNode->prev = it;
+		newNode->next = temp;
+		temp->prev = newNode;
 	}
+
 	length++;
 }
 

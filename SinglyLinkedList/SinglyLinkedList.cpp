@@ -118,6 +118,7 @@ SinglyLinkedList<T>& SinglyLinkedList<T>::Delete(int k, T & x)
 	return *this;
 }
 
+// A methdod that inserts an element into agiven position
 template<class T>
 SinglyLinkedList<T>& SinglyLinkedList<T>::Insert(int k, const T & x)
 {
@@ -139,24 +140,22 @@ SinglyLinkedList<T>& SinglyLinkedList<T>::Insert(int k, const T & x)
 		leftEnd = newNode;
 	}
 
+	// in case at the end
+	else if (k == length) {
+		rightEnd->next = newNode;
+		rightEnd = newNode;
+	}
+
+	// otherwise in case in between
 	else {
 		// iterate untill the prev of the position given
 		SingleNode<T> *it = leftEnd;
 		for (int i = 0; i < k - 1; i++)
 			it = it->next;
 
-		// in case at the end
-		if (k == length) {
-			rightEnd->next = newNode;
-			rightEnd = newNode;
-		}
-
-		// in case in between
-		else {
-			SingleNode<T> *temp = it->next;
-			it->next = newNode;
-			newNode->next = temp;
-		}
+		SingleNode<T> *temp = it->next;
+		it->next = newNode;
+		newNode->next = temp;
 	}
 
 	length++;
@@ -214,31 +213,50 @@ template<class T>
 void SinglyLinkedList<T>::swap(int firstIndex, int secondIndex)
 {
 	// check indexes
-	checkIndex(firstIndex);
-	checkIndex(secondIndex);
+	if (firstIndex < 0 || firstIndex >= length
+		|| secondIndex < 0 || secondIndex >= length)
+		throw std::out_of_range("Index Out of Bounds");
 
-	// get the previous node of the first
-	SingleNode<T> *firstNodePrev = leftEnd;
-	for (int i = 0; i < firstIndex - 1; i++)
-		firstNodePrev = firstNodePrev->next;
+	// declare some pointers to work with
+	SingleNode<T> *firstNodePrev = nullptr, *firstNode = leftEnd,
+		*secondNodePrev = nullptr, *secondNode = leftEnd;
 
-	// get the previous node of the second
-	SingleNode<T> *secondNodePrev = leftEnd;
-	for (int i = 0; i < secondIndex - 1; i++)
-		secondNodePrev = secondNodePrev->next;
+	// get the first node and its previous
+	if (firstIndex != 0) {
+		firstNodePrev = leftEnd;
+		for (int i = 0; i < firstIndex - 1; i++)
+			firstNodePrev = firstNodePrev->next;
+		firstNode = firstNodePrev->next;
+	}
 
-	// get the nodes themselves
-	SingleNode<T> *firstNode = firstNodePrev->next;
-	SingleNode<T> *secondNode = secondNodePrev->next;
+	// get the second node and its previous
+	if (secondIndex != 0) {
+		secondNodePrev = leftEnd;
+		for (int i = 0; i < secondIndex - 1; i++)
+			secondNodePrev = secondNodePrev->next;
+		secondNode = secondNodePrev->next;
+	}
 
 	// swap the previous nexts
-	firstNodePrev->next = secondNode;
-	secondNodePrev->next = firstNode;
+	if (firstNodePrev != nullptr)
+		firstNodePrev->next = secondNode;
+	if (secondNodePrev != nullptr)
+		secondNodePrev->next = firstNode;
 
 	// swap the nodes nexts
 	SingleNode<T> *temp = firstNode->next;
 	firstNode->next = secondNode->next;
 	secondNode->next = temp;
+
+	// update list pointers
+	if (firstIndex == 0)
+		leftEnd = secondNode;
+	if (secondIndex == 0)
+		leftEnd = firstNode;
+	if (firstIndex == length - 1)
+		rightEnd = secondNode;
+	if (secondIndex == length - 1)
+		rightEnd = firstNode;
 }
 
 // A method that reverses the linked list
@@ -478,25 +496,24 @@ void SinglyLinkedList<T>::insert(T element)
 		leftEnd = newNode;
 	}
 
-	// otherwise iterate until the proper position
+	// in case insertion should be at the end
+	else if (rightEnd->data < element) {
+		rightEnd->next = newNode;
+		rightEnd = newNode;
+	}
+
+	// otherwise, in case in between 
 	else {
+		// iterate until the proper position
 		SingleNode<T> *it = leftEnd;
 		while (it->next != nullptr && it->next->data < element)
 			it = it->next;
 
-		// in case insertion should be at the end
-		if (it->next == nullptr) {
-			rightEnd->next = newNode;
-			rightEnd = newNode;
-		}
-
-		// in case insertion shoule be in between
-		else {
-			SingleNode<T> *temp = it->next;
-			it->next = newNode;
-			newNode->next = temp;
-		}
+		SingleNode<T> *temp = it->next;
+		it->next = newNode;
+		newNode->next = temp;
 	}
+
 	length++;
 }
 

@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void DoubleTest() {
+void doubleTest() {
 	DoublyLinkedList<int> list;
 	cout << "\n ----------------- Double Test ----------------- \n";
 
